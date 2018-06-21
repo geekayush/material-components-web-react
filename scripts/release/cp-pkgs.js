@@ -23,6 +23,7 @@ const path = require('path');
 const fs = require('fs');
 const cpFile = require('cp-file');
 const {sync: globSync} = require('glob');
+const {copyFilesToNpmPackages} = require('./cp-npm-pkgs');
 
 const PKG_RE = /^(([a-z]*\-?)*)/;
 
@@ -46,7 +47,9 @@ function getAssetEntry(asset) {
 }
 
 function cpAsset(asset) {
-  const assetPkg = path.join('packages', getAssetEntry(asset));
+  const assetEntry = getAssetEntry(asset);
+  const assetPkg = path.join('packages', assetEntry);
+  const destinationAssetPkg = path.join('npm_packages', assetEntry);
   if (!fs.existsSync(assetPkg)) {
     Promise.reject(new Error(`Non-existent asset package path ${assetPkg} for ${asset}`));
   }
@@ -69,12 +72,13 @@ function cpAsset(asset) {
     }
   }
 
-  const destDir = path.join(assetPkg, 'dist', basename);
+  const destDir = path.join(destinationAssetPkg, 'dist', basename);
   return cpFile(asset, destDir)
     .then(() => console.log(`cp ${asset} -> ${destDir}`));
 }
 
-Promise.all(globSync('build/*.{css,js,map}').map(cpAsset))
+function copyCompiledFilesToNpmPackages() {
+  Promise.all(globSync('build/*.{css,js,map}').map(cpAsset))
   .then(() => {
     console.log('done!');
   })
@@ -82,3 +86,7 @@ Promise.all(globSync('build/*.{css,js,map}').map(cpAsset))
     console.error(`Error encountered copying assets: ${err}`);
     process.exit(1);
   });
+}
+
+copyFilesToNpmPackages();
+copyCompiledFilesToNpmPackages();

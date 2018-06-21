@@ -8,7 +8,7 @@
     }
   },
   "packages": [
-    "packages/*"
+    "npm_packages/*"
   ],
   "version": "0.2.0"
 }
